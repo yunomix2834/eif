@@ -1,0 +1,56 @@
+# Go
+/bin/
+/build/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+coverage.html
+/vendor/
+go.work
+go.work.sum
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+secret/
+
+# Runtime
+*.log
+logs/
+tmp/
+temp/
+runtime/
+*.db
+*.sqlite
+*.sqlite3
+
+# Frontend build workspace
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# CI copies the Next static export here before building the final image.
+web/static/*
+!web/static/.gitkeep

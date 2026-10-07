@@ -1,0 +1,15 @@
+.git
+.github
+bin
+build
+dist
+.env
+.env.*
+!.env.example
+node_modules
+.next
+out
+*.log
+coverage.out
+coverage.html
+runtime

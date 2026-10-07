@@ -1,0 +1,57 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GOVULNCHECK_VERSION: "v1.7.0"
+  TRIVY_VERSION: "v0.74.0"
+
+jobs:
+  ci:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Quality checks
+        run: |
+          make mod-check
+          make lint
+          make test
+
+      - name: Install govulncheck
+        run: go install "golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION}"
+
+      - name: Setup Trivy
+        uses: aquasecurity/setup-trivy@e07451d2e059ed86c2870430ea286b3a9e0bf241
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          cache: true
+
+      - name: Security checks
+        run: |
+          ./scripts/ci/trivy-source.sh dist/security/source
+          ./scripts/ci/govulncheck.sh dist/security/source
+
+      - name: Production build
+        run: make build

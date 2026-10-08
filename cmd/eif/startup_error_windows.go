@@ -69,10 +69,10 @@ func writeStartupErrorLog(err error) string {
 	}
 
 	// Ví dụ: C:\Users\yunom\AppData\Local\
-	// YunoTools\EIF\startup-error.log
+	// Yunomix2834\EIF\startup-error.log
 	dir := filepath.Join(
 		base,
-		"YunoTools",
+		"Yunomix2834",
 		"EIF",
 	)
 	if mkdirErr := os.MkdirAll(

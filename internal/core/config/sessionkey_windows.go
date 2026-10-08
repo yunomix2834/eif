@@ -23,7 +23,7 @@ var (
 	cryptProtectData     = crypt32DLL.NewProc("CryptProtectData")
 	cryptUnprotectData   = crypt32DLL.NewProc("CryptUnprotectData")
 	localFree            = kernel32DLL.NewProc("LocalFree")
-	dpapiOptionalEntropy = []byte("YunoTools EIF session-key v1")
+	dpapiOptionalEntropy = []byte("Yunomix2834 EIF session-key v1")
 )
 
 type dataBlob struct {
@@ -46,7 +46,7 @@ func getDefaultSessionStorePath() string {
 	}
 	return filepath.Join(
 		base,
-		"YunoTools",
+		"Yunomix2834",
 		"EIF",
 		"hddtgdt-sessions.enc",
 	)

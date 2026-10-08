@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	corehttp "github.com/yunotools/eif/internal/core/protocol/httpclient"
-	"github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/session"
+	corehttp "github.com/yunomix2834/eif/internal/core/protocol/httpclient"
+	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/session"
 )
 
 type hddtgdtClient struct {

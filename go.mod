@@ -1,4 +1,4 @@
-module github.com/yunotools/eif
+module github.com/yunomix2834/eif
 
 go 1.26.8
 

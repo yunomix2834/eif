@@ -27,11 +27,11 @@ RUN --mount=type=cache,target=/go/pkg/mod \
       -trimpath \
       -buildvcs=false \
       -ldflags="-s -w \
-        -X github.com/yunotools/eif/internal/core/buildinfo.Version=${EIF_VERSION} \
-        -X github.com/yunotools/eif/internal/core/buildinfo.BackendCommit=${EIF_BACKEND_COMMIT} \
-        -X github.com/yunotools/eif/internal/core/buildinfo.FrontendCommit=${EIF_FRONTEND_COMMIT} \
-        -X github.com/yunotools/eif/internal/core/buildinfo.OrchestratorCommit=${EIF_ORCHESTRATOR_COMMIT} \
-        -X github.com/yunotools/eif/internal/core/buildinfo.BuildTime=${EIF_BUILD_TIME}" \
+        -X github.com/yunomix2834/eif/internal/core/buildinfo.Version=${EIF_VERSION} \
+        -X github.com/yunomix2834/eif/internal/core/buildinfo.BackendCommit=${EIF_BACKEND_COMMIT} \
+        -X github.com/yunomix2834/eif/internal/core/buildinfo.FrontendCommit=${EIF_FRONTEND_COMMIT} \
+        -X github.com/yunomix2834/eif/internal/core/buildinfo.OrchestratorCommit=${EIF_ORCHESTRATOR_COMMIT} \
+        -X github.com/yunomix2834/eif/internal/core/buildinfo.BuildTime=${EIF_BUILD_TIME}" \
       -o /out/eif \
       ./cmd/eif
 
@@ -46,7 +46,7 @@ ARG EIF_BACKEND_COMMIT=unknown
 ARG EIF_FRONTEND_COMMIT=unknown
 ARG EIF_ORCHESTRATOR_COMMIT=unknown
 ARG EIF_BUILD_TIME=unknown
-ARG EIF_SOURCE_URL=https://github.com/yunotools/eif
+ARG EIF_SOURCE_URL=https://github.com/yunomix2834/eif
 
 LABEL org.opencontainers.image.title="EIF" \
       org.opencontainers.image.description="Etax Invoice Fast" \

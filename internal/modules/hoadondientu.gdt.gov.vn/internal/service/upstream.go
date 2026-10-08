@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	corehttp "github.com/yunotools/eif/internal/core/protocol/httpclient"
-	"github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/client"
-	"github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/model"
+	corehttp "github.com/yunomix2834/eif/internal/core/protocol/httpclient"
+	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/client"
+	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/model"
 )
 
 const (

@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yunotools/eif/internal/core/buildinfo"
-	"github.com/yunotools/eif/internal/core/config"
-	"github.com/yunotools/eif/internal/core/middleware"
-	coremodule "github.com/yunotools/eif/internal/core/module"
-	appweb "github.com/yunotools/eif/web"
+	"github.com/yunomix2834/eif/internal/core/buildinfo"
+	"github.com/yunomix2834/eif/internal/core/config"
+	"github.com/yunomix2834/eif/internal/core/middleware"
+	coremodule "github.com/yunomix2834/eif/internal/core/module"
+	appweb "github.com/yunomix2834/eif/web"
 )
 
 func BuildEngine(

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yunotools/eif/internal/modules/updater/internal/model"
+	"github.com/yunomix2834/eif/internal/modules/updater/internal/model"
 )
 
 const (

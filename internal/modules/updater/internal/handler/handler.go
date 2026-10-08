@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yunotools/eif/internal/core/apperr"
-	"github.com/yunotools/eif/internal/modules/updater/internal/service"
+	"github.com/yunomix2834/eif/internal/core/apperr"
+	"github.com/yunomix2834/eif/internal/modules/updater/internal/service"
 )
 
 type Handler struct {

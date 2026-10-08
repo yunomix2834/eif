@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yunotools/eif/internal/core/apperr"
-	"github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/dto"
+	"github.com/yunomix2834/eif/internal/core/apperr"
+	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/dto"
 )
 
 func (h *Handler) GetCaptcha(c *gin.Context) {

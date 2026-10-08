@@ -4,11 +4,11 @@ import (
 	"errors"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yunotools/eif/internal/core/config"
-	"github.com/yunotools/eif/internal/modules/updater/internal/handler"
-	"github.com/yunotools/eif/internal/modules/updater/internal/installer"
-	"github.com/yunotools/eif/internal/modules/updater/internal/service"
-	"github.com/yunotools/eif/internal/modules/updater/internal/source"
+	"github.com/yunomix2834/eif/internal/core/config"
+	"github.com/yunomix2834/eif/internal/modules/updater/internal/handler"
+	"github.com/yunomix2834/eif/internal/modules/updater/internal/installer"
+	"github.com/yunomix2834/eif/internal/modules/updater/internal/service"
+	"github.com/yunomix2834/eif/internal/modules/updater/internal/source"
 )
 
 var ErrUnsupportedPlatform = installer.ErrUnsupportedPlatform

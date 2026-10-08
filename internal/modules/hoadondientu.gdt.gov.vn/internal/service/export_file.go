@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/yunotools/eif/internal/core/apperr"
-	"github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/model"
-	modulexlsx "github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/xlsx"
+	"github.com/yunomix2834/eif/internal/core/apperr"
+	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/model"
+	modulexlsx "github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/xlsx"
 )
 
 const accountingExportVersion = 1

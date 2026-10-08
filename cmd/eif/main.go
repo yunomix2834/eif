@@ -12,14 +12,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/yunotools/eif/internal/core/buildinfo"
-	"github.com/yunotools/eif/internal/core/config"
-	"github.com/yunotools/eif/internal/core/logger"
-	coremodule "github.com/yunotools/eif/internal/core/module"
-	corehttp "github.com/yunotools/eif/internal/core/protocol/httpclient"
-	"github.com/yunotools/eif/internal/core/router"
-	hddtgdt "github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn"
-	"github.com/yunotools/eif/internal/modules/updater"
+	"github.com/yunomix2834/eif/internal/core/buildinfo"
+	"github.com/yunomix2834/eif/internal/core/config"
+	"github.com/yunomix2834/eif/internal/core/logger"
+	coremodule "github.com/yunomix2834/eif/internal/core/module"
+	corehttp "github.com/yunomix2834/eif/internal/core/protocol/httpclient"
+	"github.com/yunomix2834/eif/internal/core/router"
+	hddtgdt "github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn"
+	"github.com/yunomix2834/eif/internal/modules/updater"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	corehttp "github.com/yunotools/eif/internal/core/protocol/httpclient"
+	corehttp "github.com/yunomix2834/eif/internal/core/protocol/httpclient"
 )
 
 var ErrAuthFlowNotFound = errors.New("authentication flow not found")

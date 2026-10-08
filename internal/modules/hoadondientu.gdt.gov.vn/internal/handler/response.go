@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yunotools/eif/internal/core/apperr"
+	"github.com/yunomix2834/eif/internal/core/apperr"
 )
 
 const sessionHeader = "X-Session-ID"

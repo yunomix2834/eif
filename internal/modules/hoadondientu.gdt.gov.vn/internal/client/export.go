@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"net/url"
 
-	corehttp "github.com/yunotools/eif/internal/core/protocol/httpclient"
-	"github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/model"
-	moduleutils "github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/utils"
+	corehttp "github.com/yunomix2834/eif/internal/core/protocol/httpclient"
+	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/model"
+	moduleutils "github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/utils"
 )
 
 func (c *hddtgdtClient) ExportInvoices(

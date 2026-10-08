@@ -149,7 +149,7 @@ func Load() (
 			IsEnabled: isUpdateEnabled,
 			Repository: readStringEnv(
 				"EIF_UPDATE_REPOSITORY",
-				"yunotools/eif-ci",
+				"yunomix2834/eif-ci",
 			),
 			Timeout: readDurationEnv(
 				"EIF_UPDATE_TIMEOUT",

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/dto"
-	"github.com/yunotools/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/session"
+	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/dto"
+	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/session"
 )
 
 func (c *hddtgdtClient) GetCaptcha(

@@ -2,10 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"net"
+	"net/http"
+	"time"
 
 	"github.com/yunomix2834/eif/internal/core/apperr"
+	corehttp "github.com/yunomix2834/eif/internal/core/protocol/httpclient"
 	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/client"
 	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/dto"
 	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/model"
@@ -257,46 +262,21 @@ func (s *service) exportChannelChunks(
 		len(prepared.ranges),
 	)
 	for _, dateRange := range prepared.ranges {
-		file, err := s.exportInvoicesUpstream(
+		chunkFiles, err := s.exportDateRangeChunks(
 			ctx,
 			auth,
 			channel,
 			direction,
-			model.ExportOptions{
-				From:   dateRange.From,
-				To:     dateRange.To,
-				Filter: prepared.filter,
-			},
+			dateRange,
+			prepared.filter,
 		)
 		if err != nil {
 			return nil, s.mapToAppError(err)
 		}
 
-		if file == nil || len(file.Body) == 0 {
-			return nil, apperr.New(
-				apperr.CodeHDDTGDTInvalidResponse,
-				fmt.Errorf(
-					"HDDT GDT returned an empty export workbook for %s to %s",
-					moduleutils.FormatInputDate(dateRange.From),
-					moduleutils.FormatInputDate(dateRange.To),
-				),
-			)
-		}
-		if err := modulexlsx.Validate(file.Body); err != nil {
-			return nil, apperr.New(
-				apperr.CodeHDDTGDTInvalidResponse,
-				fmt.Errorf(
-					"invalid export workbook for %s %s to %s: %w",
-					channel,
-					moduleutils.FormatInputDate(dateRange.From),
-					moduleutils.FormatInputDate(dateRange.To),
-					err,
-				),
-			)
-		}
 		files = append(
 			files,
-			file.Body,
+			chunkFiles...,
 		)
 	}
 
@@ -322,6 +302,139 @@ func (s *service) exportChannelChunks(
 			prepared.toDate,
 		),
 	}, nil
+}
+
+// exportDateRangeChunks tải một khoảng ngày. Nếu HDDT GDT không phản hồi kịp,
+// khoảng đó được chia đôi và thử lại theo thứ tự mới nhất -> cũ nhất.
+//
+// Không tăng timeout một cách mù quáng: endpoint export của GDT có những khoảng
+// dữ liệu lớn không trả header dù chờ đủ 60 giây, trong khi cùng dữ liệu được
+// chia nhỏ lại hoàn thành trong vài giây. Một ngày là giới hạn cuối cùng để
+// recursion luôn dừng và lỗi timeout thật vẫn được trả về cho người dùng.
+func (s *service) exportDateRangeChunks(
+	ctx context.Context,
+	auth *client.AuthenticatedContext,
+	channel model.InvoiceChannel,
+	direction model.InvoiceDirection,
+	dateRange moduleutils.DateRange,
+	filter model.InvoiceFilter,
+) (
+	[][]byte,
+	error,
+) {
+	file, err := s.exportInvoicesUpstream(
+		ctx,
+		auth,
+		channel,
+		direction,
+		model.ExportOptions{
+			From:   dateRange.From,
+			To:     dateRange.To,
+			Filter: filter,
+		},
+	)
+	if err != nil {
+		newer, older, canSplit := splitExportDateRange(dateRange)
+		if canSplit && isRetryableExportTimeout(ctx, err) {
+			slog.Warn(
+				"HDDT GDT export timed out; retrying smaller date ranges",
+				"channel", channel,
+				"direction", direction,
+				"from", moduleutils.FormatInputDate(dateRange.From),
+				"to", moduleutils.FormatInputDate(dateRange.To),
+			)
+
+			result := make([][]byte, 0, 2)
+			for _, child := range []moduleutils.DateRange{newer, older} {
+				childFiles, childErr := s.exportDateRangeChunks(
+					ctx,
+					auth,
+					channel,
+					direction,
+					child,
+					filter,
+				)
+				if childErr != nil {
+					return nil, childErr
+				}
+				result = append(result, childFiles...)
+			}
+			return result, nil
+		}
+		return nil, err
+	}
+
+	if file == nil || len(file.Body) == 0 {
+		return nil, fmt.Errorf(
+			"HDDT GDT returned an empty export workbook for %s to %s",
+			moduleutils.FormatInputDate(dateRange.From),
+			moduleutils.FormatInputDate(dateRange.To),
+		)
+	}
+	if err := modulexlsx.Validate(file.Body); err != nil {
+		return nil, fmt.Errorf(
+			"invalid export workbook for %s %s to %s: %w",
+			channel,
+			moduleutils.FormatInputDate(dateRange.From),
+			moduleutils.FormatInputDate(dateRange.To),
+			err,
+		)
+	}
+
+	return [][]byte{file.Body}, nil
+}
+
+func isRetryableExportTimeout(
+	ctx context.Context,
+	err error,
+) bool {
+	if err == nil || ctx.Err() != nil {
+		return false
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return true
+	}
+
+	var httpErr *corehttp.HTTPError
+	return errors.As(err, &httpErr) &&
+		httpErr.StatusCode == http.StatusGatewayTimeout
+}
+
+func splitExportDateRange(
+	value moduleutils.DateRange,
+) (
+	newer moduleutils.DateRange,
+	older moduleutils.DateRange,
+	ok bool,
+) {
+	days := moduleutils.CalculateInclusiveDays(value.From, value.To)
+	if days <= 1 {
+		return moduleutils.DateRange{}, moduleutils.DateRange{}, false
+	}
+
+	splitAt := time.Date(
+		value.From.Year(),
+		value.From.Month(),
+		value.From.Day(),
+		0,
+		0,
+		0,
+		0,
+		value.From.Location(),
+	).AddDate(0, 0, days/2)
+
+	return moduleutils.DateRange{
+			From: splitAt,
+			To:   value.To,
+		}, moduleutils.DateRange{
+			From: value.From,
+			To:   splitAt.Add(-time.Second),
+		}, true
 }
 
 func getExportSourceName(channel model.InvoiceChannel) string {

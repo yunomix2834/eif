@@ -4,18 +4,29 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
+	"net"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/yunomix2834/eif/internal/core/apperr"
+	corehttp "github.com/yunomix2834/eif/internal/core/protocol/httpclient"
 	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/client"
 	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/dto"
 	"github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/model"
 	moduleutils "github.com/yunomix2834/eif/internal/modules/hoadondientu.gdt.gov.vn/internal/utils"
 )
+
+var invoiceQuerySizes = [...]int{
+	model.MaxInvoiceQuerySize,
+	150,
+	100,
+	50,
+}
 
 func (s *service) QueryInvoiceSold(
 	ctx context.Context,
@@ -274,9 +285,9 @@ func (s *service) queryInvoicesWithAuth(
 }
 
 // queryAllRange dùng total của HDDTGDT để chia đôi khoảng thời gian cho tới khi
-// mỗi request có <= 50 bản ghi.
+// mỗi request trả về đầy đủ bản ghi.
 // Nhờ vậy một lần tra cứu EIF lấy toàn bộ dữ liệu dù
-// endpoint HDDTGDT chỉ trả tối đa 50 bản ghi mỗi request.
+// endpoint HDDTGDT giới hạn số bản ghi mỗi request.
 func (s *service) queryAllRange(
 	ctx context.Context,
 	auth *client.AuthenticatedContext,
@@ -288,17 +299,13 @@ func (s *service) queryAllRange(
 	*allRangeResult,
 	error,
 ) {
-	response, err := s.queryInvoicesUpstream(
+	response, querySize, err := s.queryInvoiceRangeWithAdaptiveSize(
 		ctx,
 		auth,
 		channel,
 		direction,
-		model.QueryOptions{
-			From:   dateRange.From,
-			To:     dateRange.To,
-			Size:   model.MaxInvoiceQuerySize,
-			Filter: filter,
-		},
+		dateRange,
+		filter,
 	)
 	if err != nil {
 		return nil, err
@@ -318,22 +325,24 @@ func (s *service) queryAllRange(
 		return result, nil
 	}
 
-	if response.Total <= model.MaxInvoiceQuerySize {
+	if response.Total <= querySize {
 		return nil, fmt.Errorf(
-			"HDDT GDT reported %d invoices but returned only %d",
+			"HDDT GDT reported %d invoices but returned only %d when size=%d",
 			response.Total,
 			len(response.Records),
+			querySize,
 		)
 	}
 
 	newer, older, ok := splitAdaptiveRange(dateRange)
 	if !ok {
 		return nil, fmt.Errorf(
-			"cannot load all %d invoices between %s and %s because the GDT query endpoint returns at most %d records for the same second",
+			"cannot load all %d invoices between %s and %s because the GDT query endpoint returned only %d records for the same second when size=%d",
 			response.Total,
 			moduleutils.FormatInputDate(dateRange.From),
 			moduleutils.FormatInputDate(dateRange.To),
-			model.MaxInvoiceQuerySize,
+			len(response.Records),
+			querySize,
 		)
 	}
 
@@ -370,6 +379,90 @@ func (s *service) queryAllRange(
 	)
 
 	return result, nil
+}
+
+// queryInvoiceRangeWithAdaptiveSize thử size lớn trước để giảm số request.
+// Một số phiên bản/cụm HDDTGDT giới hạn size khác nhau, nên khi upstream từ
+// chối hoặc không xử lý được request lớn thì hạ dần 200 -> 150 -> 100 -> 50.
+func (s *service) queryInvoiceRangeWithAdaptiveSize(
+	ctx context.Context,
+	auth *client.AuthenticatedContext,
+	channel model.InvoiceChannel,
+	direction model.InvoiceDirection,
+	dateRange moduleutils.DateRange,
+	filter model.InvoiceFilter,
+) (
+	*model.InvoiceQueryResult,
+	int,
+	error,
+) {
+	var lastErr error
+	for index, size := range invoiceQuerySizes {
+		result, err := s.queryInvoicesUpstream(
+			ctx,
+			auth,
+			channel,
+			direction,
+			model.QueryOptions{
+				From:   dateRange.From,
+				To:     dateRange.To,
+				Size:   size,
+				Filter: filter,
+			},
+		)
+		if err == nil {
+			return result, size, nil
+		}
+
+		lastErr = err
+		if index == len(invoiceQuerySizes)-1 ||
+			!shouldRetryInvoiceQueryWithSmallerSize(ctx, err) {
+			return nil, size, err
+		}
+
+		slog.Warn(
+			"HDDT GDT invoice query failed; retrying with smaller size",
+			"channel", channel,
+			"direction", direction,
+			"from", moduleutils.FormatInputDate(dateRange.From),
+			"to", moduleutils.FormatInputDate(dateRange.To),
+			"size", size,
+			"next_size", invoiceQuerySizes[index+1],
+			"error", err,
+		)
+	}
+
+	return nil, invoiceQuerySizes[len(invoiceQuerySizes)-1], lastErr
+}
+
+func shouldRetryInvoiceQueryWithSmallerSize(
+	ctx context.Context,
+	err error,
+) bool {
+	if err == nil || ctx.Err() != nil {
+		return false
+	}
+
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return true
+	}
+
+	var httpErr *corehttp.HTTPError
+	if !errors.As(err, &httpErr) {
+		return false
+	}
+
+	switch httpErr.StatusCode {
+	case http.StatusBadRequest,
+		http.StatusRequestTimeout,
+		http.StatusRequestEntityTooLarge,
+		http.StatusUnprocessableEntity:
+		return true
+	default:
+		return httpErr.StatusCode >= http.StatusInternalServerError &&
+			httpErr.StatusCode <= 599
+	}
 }
 
 func getInvoiceDatasetCacheKey(

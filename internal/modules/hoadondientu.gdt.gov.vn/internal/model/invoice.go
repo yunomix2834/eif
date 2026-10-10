@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const MaxInvoiceQuerySize = 50
+const MaxInvoiceQuerySize = 200
 
 type InvoiceChannel string
 
